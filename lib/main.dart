@@ -1,6 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:gogogrow/firebase_options.dart';
+import 'dart:async';
+import 'dart:math';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -1438,12 +1440,16 @@ class _GenderSelectionPageState extends State<GenderSelectionPage> {
   }
 
   void _navigateToNextPage(String gender) {
-    // Navigate to next page with all the collected data
-    // Replace 'FinalPage()' with your actual next page widget
+    // Retrieve the previous route arguments if available
+    String userName = '';
+    final previousRoute = ModalRoute.of(context);
+    if (previousRoute != null && previousRoute.settings.arguments != null) {
+      userName = previousRoute.settings.arguments as String;
+    }
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => DashboardPage(
-          userName: '', // TODO: Pass the actual user name here
+          userName: userName,
           selectedMonth: widget.selectedMonth,
           selectedDay: widget.selectedDay,
           selectedYear: widget.selectedYear,
@@ -1734,16 +1740,1140 @@ class DashboardPage extends StatelessWidget {
   }
 
   void _navigateToActivity(BuildContext context, String activity) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ParentDashboardPage(activity: activity),
+    if (activity == 'Mini Game') {
+      // Navigate to the Bubble Pop Game
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const BubblePopGame()),
+      );
+    } else if (activity == 'Eat Healthy') {
+      // Navigate to the Brush Teeth interface
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const EatHealthyInterface()),
+      );
+    } else {
+      // For other activities, navigate to the Parent Dashboard
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ParentDashboardPage(activity: activity),
+        ),
+      );
+    }
+  }
+}
+
+// Sample activity page (replace with your actual activity pages)
+// Update the Eat Healthy card in HomeDashboardPage to navigate to this new interface
+class EatHealthyInterface extends StatefulWidget {
+  const EatHealthyInterface({Key? key}) : super(key: key);
+
+  @override
+  State<EatHealthyInterface> createState() => _EatHealthyInterfaceState();
+}
+
+class _EatHealthyInterfaceState extends State<EatHealthyInterface>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  int selectedFoodIndex = -1;
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF81C784), // Light green
+              Color(0xFFA5D6A7), // Lighter green
+              Color(0xFFE8F5E8), // Very light green
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '🍎 Eat Healthy! 🥕',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                          Text(
+                            'Learn about nutritious foods!',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.white70,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Tab Bar
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  indicator: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    color: const Color(0xFF66BB6A),
+                  ),
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.grey,
+                  labelStyle: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  tabs: const [
+                    Tab(text: '🔍 Detector'),
+                    Tab(text: '📚 Learn'),
+                    Tab(text: '🍽 Good Foods'),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              // Tab Content
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildNutritionDetector(),
+                    _buildFoodHabitsLearning(),
+                    _buildGoodFoodsGrid(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNutritionDetector() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        children: [
+          // Detector Card
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  '🔍 Food Nutrition Detector',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  height: 200,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF5F5F5),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.grey.shade300,
+                      style: BorderStyle.solid,
+                      width: 2,
+                    ),
+                  ),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.camera_alt, size: 48, color: Colors.grey),
+                      SizedBox(height: 12),
+                      Text(
+                        'Take a photo of your food!',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'I\'ll tell you if it\'s healthy! 😊',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showNutritionResult('Camera'),
+                        icon: const Icon(Icons.camera_alt),
+                        label: const Text('Camera'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF66BB6A),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showNutritionResult('Gallery'),
+                        icon: const Icon(Icons.photo_library),
+                        label: const Text('Gallery'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF42A5F5),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Quick Analysis Cards
+          const Text(
+            'Quick Food Analysis! 🚀',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 1.2,
+            children: [
+              _buildQuickAnalysisCard(
+                '🍎',
+                'Apple',
+                'Super Healthy!',
+                Colors.red.shade100,
+              ),
+              _buildQuickAnalysisCard(
+                '🍔',
+                'Burger',
+                'Sometimes Food',
+                Colors.orange.shade100,
+              ),
+              _buildQuickAnalysisCard(
+                '🥕',
+                'Carrot',
+                'Very Healthy!',
+                Colors.orange.shade100,
+              ),
+              _buildQuickAnalysisCard(
+                '🍭',
+                'Candy',
+                'Treat Food',
+                Colors.pink.shade100,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickAnalysisCard(
+    String emoji,
+    String food,
+    String status,
+    Color color,
+  ) {
+    return GestureDetector(
+      onTap: () => _showDetailedNutrition(food, emoji, status),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 32)),
+            const SizedBox(height: 8),
+            Text(
+              food,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            Text(
+              status,
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFoodHabitsLearning() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Fun Facts Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '🌟 Fun Food Facts!',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildFactCard(
+                  '🥕 Carrots help you see better in the dark!',
+                  Colors.orange.shade100,
+                ),
+                const SizedBox(height: 8),
+                _buildFactCard(
+                  '🍌 Bananas make you happy and give you energy!',
+                  Colors.yellow.shade100,
+                ),
+                const SizedBox(height: 8),
+                _buildFactCard(
+                  '🥛 Milk makes your bones super strong!',
+                  Colors.blue.shade100,
+                ),
+                const SizedBox(height: 8),
+                _buildFactCard(
+                  '🍎 An apple a day keeps the doctor away!',
+                  Colors.red.shade100,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Good Habits Section
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '✨ Super Healthy Habits!',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildHabitCard('1. Eat 5 colors every day! 🌈', '🎨'),
+                _buildHabitCard('2. Drink lots of water! 💧', '💦'),
+                _buildHabitCard('3. Eat slowly and chew well! 😋', '🍽'),
+                _buildHabitCard('4. Try new foods! 🆕', '🥗'),
+                _buildHabitCard('5. Eat with family! 👨‍👩‍👧‍👦', '❤'),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Interactive Quiz
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.purple.shade100,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                const Text(
+                  '🧠 Food Quiz Time!',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Which food gives you the most energy?',
+                  style: TextStyle(fontSize: 16, color: Colors.black87),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildQuizOption('🍌', 'Banana', true),
+                    _buildQuizOption('🍭', 'Candy', false),
+                    _buildQuizOption('🥤', 'Soda', false),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFactCard(String fact, Color color) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        fact,
+        style: const TextStyle(
+          fontSize: 14,
+          color: Colors.black87,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHabitCard(String habit, String emoji) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Text(emoji, style: const TextStyle(fontSize: 20)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              habit,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuizOption(String emoji, String text, bool isCorrect) {
+    return GestureDetector(
+      onTap: () => _showQuizResult(isCorrect, text),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 24)),
+            const SizedBox(height: 4),
+            Text(
+              text,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGoodFoodsGrid() {
+    final goodFoods = [
+      {
+        'emoji': '🍎',
+        'name': 'Apple',
+        'benefit': 'Vitamins & Fiber',
+        'color': Colors.red.shade100,
+      },
+      {
+        'emoji': '🥕',
+        'name': 'Carrot',
+        'benefit': 'Good for Eyes',
+        'color': Colors.orange.shade100,
+      },
+      {
+        'emoji': '🍌',
+        'name': 'Banana',
+        'benefit': 'Energy & Potassium',
+        'color': Colors.yellow.shade100,
+      },
+      {
+        'emoji': '🥛',
+        'name': 'Milk',
+        'benefit': 'Strong Bones',
+        'color': Colors.blue.shade50,
+      },
+      {
+        'emoji': '🥬',
+        'name': 'Spinach',
+        'benefit': 'Iron & Strength',
+        'color': Colors.green.shade100,
+      },
+      {
+        'emoji': '🍓',
+        'name': 'Strawberry',
+        'benefit': 'Vitamin C',
+        'color': Colors.pink.shade100,
+      },
+      {
+        'emoji': '🥦',
+        'name': 'Broccoli',
+        'benefit': 'Super Veggie',
+        'color': Colors.green.shade200,
+      },
+      {
+        'emoji': '🐟',
+        'name': 'Fish',
+        'benefit': 'Brain Food',
+        'color': Colors.cyan.shade100,
+      },
+      {
+        'emoji': '🥜',
+        'name': 'Nuts',
+        'benefit': 'Healthy Fats',
+        'color': Colors.brown.shade100,
+      },
+      {
+        'emoji': '🍇',
+        'name': 'Grapes',
+        'benefit': 'Antioxidants',
+        'color': Colors.purple.shade100,
+      },
+    ];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '🌟 Super Foods for Super Kids!',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              childAspectRatio: 1.1,
+            ),
+            itemCount: goodFoods.length,
+            itemBuilder: (context, index) {
+              final food = goodFoods[index];
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    selectedFoodIndex = selectedFoodIndex == index ? -1 : index;
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  transform: Matrix4.identity()
+                    ..scale(selectedFoodIndex == index ? 1.05 : 1.0),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: food['color'] as Color,
+                    borderRadius: BorderRadius.circular(16),
+                    border: selectedFoodIndex == index
+                        ? Border.all(color: Colors.green, width: 3)
+                        : null,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: selectedFoodIndex == index ? 8 : 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        food['emoji'] as String,
+                        style: const TextStyle(fontSize: 40),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        food['name'] as String,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        food['benefit'] as String,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.black54,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      if (selectedFoodIndex == index)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            '⭐ Great Choice!',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showNutritionResult(String source) {
+    final results = [
+      'This looks like an apple! 🍎\nSuper healthy choice! ⭐⭐⭐⭐⭐',
+      'I see a banana! �banana\nGreat for energy! ⭐⭐⭐⭐',
+      'That\'s broccoli! 🥦\nSuper veggie power! ⭐⭐⭐⭐⭐',
+      'Looks like cookies! 🍪\nTreat food - enjoy in moderation! ⭐⭐',
+    ];
+
+    final random = Random();
+    final result = results[random.nextInt(results.length)];
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text('🔍 Nutrition Analysis'),
+          content: Text(
+            result,
+            style: const TextStyle(fontSize: 16),
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cool! 😊'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDetailedNutrition(String food, String emoji, String status) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text('$emoji $food'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Health Status: $status',
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Nutritional Benefits:',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _getNutritionalInfo(food),
+                style: const TextStyle(fontSize: 14),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Thanks! 😊'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  String _getNutritionalInfo(String food) {
+    switch (food.toLowerCase()) {
+      case 'apple':
+        return 'Rich in fiber and vitamin C!\nHelps keep you full and healthy! 🍎';
+      case 'burger':
+        return 'Has protein but also high in fat.\nEnjoy occasionally! 🍔';
+      case 'carrot':
+        return 'Full of beta-carotene for good eyesight!\nCrunchy and sweet! 🥕';
+      case 'candy':
+        return 'High in sugar - gives quick energy.\nSave for special treats! 🍭';
+      default:
+        return 'Every food has its place in a balanced diet! 😊';
+    }
+  }
+
+  void _showQuizResult(bool isCorrect, String choice) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(isCorrect ? '🎉 Correct!' : '🤔 Try Again!'),
+          content: Text(
+            isCorrect
+                ? 'Yes! Bananas are packed with natural sugars and potassium for quick, healthy energy! 🍌⚡'
+                : 'Good try! Bananas are actually the best choice for natural energy! 🍌',
+            textAlign: TextAlign.center,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Got it! 😊'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+// Bubble Pop Mini Game for Kids
+class BubblePopGame extends StatefulWidget {
+  const BubblePopGame({Key? key}) : super(key: key);
+
+  @override
+  State<BubblePopGame> createState() => _BubblePopGameState();
+}
+
+class _BubblePopGameState extends State<BubblePopGame>
+    with TickerProviderStateMixin {
+  List<Bubble> bubbles = [];
+  int score = 0;
+  Timer? gameTimer;
+  Timer? bubbleTimer;
+  final Random random = Random();
+  late AnimationController animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    startGame();
+  }
+
+  void startGame() {
+    // Add bubbles periodically
+    bubbleTimer = Timer.periodic(const Duration(milliseconds: 1000), (timer) {
+      if (mounted) {
+        addBubble();
+      }
+    });
+
+    // Remove bubbles that go off screen
+    gameTimer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+      if (mounted) {
+        setState(() {
+          bubbles.removeWhere(
+            (bubble) => bubble.y > MediaQuery.of(context).size.height,
+          );
+        });
+      }
+    });
+  }
+
+  void addBubble() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    setState(() {
+      bubbles.add(
+        Bubble(
+          x: random.nextDouble() * (screenWidth - 60),
+          y: -50,
+          color: Colors.primaries[random.nextInt(Colors.primaries.length)],
+          size: 40 + random.nextDouble() * 30,
+        ),
+      );
+    });
+  }
+
+  void popBubble(int index) {
+    setState(() {
+      bubbles.removeAt(index);
+      score += 10;
+    });
+
+    // Play pop animation
+    animationController.forward().then((_) {
+      animationController.reset();
+    });
+  }
+
+  @override
+  void dispose() {
+    gameTimer?.cancel();
+    bubbleTimer?.cancel();
+    animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF87CEEB), // Sky blue
+              Color(0xFF98FB98), // Pale green
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Stack(
+            children: [
+              // Game Area
+              Positioned.fill(
+                child: Stack(
+                  children: bubbles.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    Bubble bubble = entry.value;
+
+                    return AnimatedPositioned(
+                      duration: const Duration(milliseconds: 100),
+                      left: bubble.x,
+                      top: bubble.y += 2, // Move bubbles down
+                      child: GestureDetector(
+                        onTap: () => popBubble(index),
+                        child: Container(
+                          width: bubble.size,
+                          height: bubble.size,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: bubble.color.withOpacity(0.7),
+                            border: Border.all(color: Colors.white, width: 3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.5),
+                                blurRadius: 10,
+                                offset: const Offset(0, 0),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              '✨',
+                              style: TextStyle(fontSize: bubble.size * 0.3),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+
+              // Header with score and back button
+              Positioned(
+                top: 20,
+                left: 20,
+                right: 20,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text('🏆', style: TextStyle(fontSize: 20)),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Score: $score',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Game Instructions
+              if (bubbles.isEmpty && score == 0)
+                Positioned(
+                  bottom: 100,
+                  left: 20,
+                  right: 20,
+                  child: Center(
+                    child: Container(
+                      padding: EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '🫧 Bubble Pop Game! 🫧',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Tap the bubbles to pop them and earn points!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
-// Sample activity page (replace with your actual activity pages)
+class Bubble {
+  double x;
+  double y;
+  final Color color;
+  final double size;
+
+  Bubble({
+    required this.x,
+    required this.y,
+    required this.color,
+    required this.size,
+  });
+}
+
 class ParentDashboardPage extends StatelessWidget {
   final String activity;
   const ParentDashboardPage({super.key, required this.activity});
